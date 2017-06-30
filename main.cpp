@@ -48,15 +48,23 @@ static const float GAMMA_BOOST_EXPONENT_DEFAULT = 2.0f; //(2.0 is the same max t
 //("g" for global)
 float g_gammaBoostExponent; //set in main method
 bool g_exiting = false; //whether or not the main thread says it's time to quit
+//forward declarations//
+void setHighGamma(); void setDefaultGamma();
+// //
 struct Monitor {
 	GLFWmonitor* mon;
 	int width; //"To get the current video mode of a monitor call glfwGetVideoMode."
 	int height;
 	int xpos; //"The position of the monitor on the virtual desktop, in screen coordinates, can be retrieved with glfwGetMonitorPos."
 	int ypos;
+	bool gammaToggle; //whether or not the monitor is toggled to be gamma ramped up or not
+	void toggleGamma() { 
+		gammaToggle = !gammaToggle;
+		if (gammaToggle) setHighGamma(); else setDefaultGamma();
+	}
 };
 std::vector<Monitor> g_monitors;
-const Monitor* g_currentMonitor; //in updateCurrentMonitor(), this will be set to the monitor that the user has his or her mouse over currently
+Monitor* g_currentMonitor; //in updateCurrentMonitor(), this will be set to the monitor that the user has his or her mouse over currently
 void updateMonitorInfo() {
 	g_monitors.clear();
 	int count;
@@ -67,16 +75,16 @@ void updateMonitorInfo() {
 	const GLFWvidmode* mode;
 	int xpos, ypos;
 	for (int i = 0; i < count; i++) {
-		monitor = monitors[0];
+		monitor = monitors[i];
 		mode = glfwGetVideoMode(monitor);
 		glfwGetMonitorPos(monitor, &xpos, &ypos);
-		g_monitors.push_back({ monitor, mode->width, mode->height, xpos, ypos });
+		g_monitors.push_back({ monitor, mode->width, mode->height, xpos, ypos, false });
 	}
 	// //
 }
 void updateCurrentMonitor() {
 	Robot::Point mousePos = mouse.GetPos();
-	for (const Monitor& mon : g_monitors) {
+	for (Monitor& mon : g_monitors) {
 		//check if our mouse is in this monitor
 		if (mousePos.X > mon.xpos &&
 			mousePos.X < mon.xpos + mon.width &&
@@ -102,15 +110,14 @@ void setDefaultGamma() {
 
 void hotkey_gammaToggle() {
 	//Robot::KeyState keysRequired({ {Robot::Key::KeySystem, true}, {Robot::Key::KeyB, true} });
-	bool toggle = false;
+	//bool toggle = false;
 	int keymissCount;
 	while (true) {
 		keymissCount = 0;
 		HOTKEY_WAIT_UNTIL_TRUE__AND_EXIT_IF_MAIN_THREAD_IS_ENDING(kbd.GetState(Robot::Key::KeySystem) && kbd.GetState(Robot::Key::KeyG));
 		if (keymissCount != 0) {
 			updateCurrentMonitor();
-			toggle = !toggle;
-			if (toggle) setHighGamma(); else setDefaultGamma();
+			g_currentMonitor->toggleGamma();
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -162,9 +169,12 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 
 	//tut
 	msgBox(
-"- Press {Windows Key + G} to toggle gamma (brightness) \n\
-- Press {Escape} to exit the program \n\n\
-Tip: Edit the config.txt file to set the gamma \nto be used when toggling (requires restart)"
+"Controls:\n\
+ - Press {Windows Key + G} to toggle gamma (brightness)\n\
+ - Press {Escape} to exit the program\n\n\
+Tips:\n\
+ - Edit the config.txt file to set the gamma to be used when toggling (requires restart)\n\
+ - Gamma is toggled for the monitor that the mouse is currently hovering over"
 	);
 
 	std::thread hotkeyThread_winkeyPlusB(hotkey_gammaToggle);
