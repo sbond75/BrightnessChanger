@@ -126,7 +126,7 @@ void hotkey_gammaToggle() {
 }
 void hotkey_exit() {
 	int keymissCount = 0;
-	HOTKEY_WAIT_UNTIL_TRUE__AND_EXIT_IF_MAIN_THREAD_IS_ENDING(kbd.GetState(Robot::Key::KeySystem) && kbd.GetState(Robot::Key::KeyEscape));
+	HOTKEY_WAIT_UNTIL_TRUE__AND_EXIT_IF_MAIN_THREAD_IS_ENDING(kbd.GetState(Robot::Key::KeySystem) && kbd.GetState(Robot::Key::KeyGrave));
 }
 
 #define EXITING	{ g_exiting = true; hotkeyThread_winkeyPlusB.join(); }
@@ -176,7 +176,7 @@ int main()
 	msgBox(std::string(
 "Controls:\n\
  - Press {" + std::string(Utils::SYSTEM_KEY_NAME) + " + G} to toggle gamma (brightness)\n\
- - Press {" + std::string(Utils::SYSTEM_KEY_NAME) + " + Escape} to exit the program\n\n\
+ - Press {" + std::string(Utils::SYSTEM_KEY_NAME) + " + ` (Grave)} to exit the program\n\n\
 Tips:\n\
  - Edit the config.txt file to set the gamma to be used when toggling (requires restart)\n\
  - Gamma is toggled for the monitor that the mouse is currently hovering over"
