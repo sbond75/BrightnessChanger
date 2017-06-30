@@ -164,7 +164,14 @@
     <ClInclude Include="lib\Robot\Timer.h" />
     <ClInclude Include="lib\Robot\Types.h" />
     <ClInclude Include="lib\Robot\Window.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BrightnessChanger.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Desktop\My Own Art\Sun.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
