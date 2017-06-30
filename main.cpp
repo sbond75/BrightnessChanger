@@ -15,13 +15,13 @@ static Robot::Mouse mouse = Robot::Mouse();
 //this uses our g_exiting global var.. and only works in a function that should be returned out of!! bad..         and it also counts num times so can use on press instead of on down/the entire time running it
 #define HOTKEY_WAIT_UNTIL_TRUE__AND_EXIT_IF_MAIN_THREAD_IS_ENDING(condition) { begin: if (g_exiting) { return; }   if (!(##condition)) { std::this_thread::sleep_for(std::chrono::milliseconds(50));/*<prevents tons of cpu usage*/ keymissCount++; goto begin; } }
 
-static const TCHAR* APP_TITLE = _T("BrightnessChanger");
+static const Char* APP_TITLE = text("BrightnessChanger");
 void msgBox(const char* msg) {
-	Utils::msgBox((const TCHAR*)msg, APP_TITLE);
+	Utils::msgBox((const Char*)msg, APP_TITLE);
 }
 void msgBox_error(const char* msg) {
-	static const TCHAR* APP_TITLE_WITH_ERROR = (const TCHAR*)(std::string(APP_TITLE) + ": Error").c_str();
-	Utils::msgBox((const TCHAR*)msg, APP_TITLE_WITH_ERROR);
+	static const Char* APP_TITLE_WITH_ERROR = (const Char*)(std::string(APP_TITLE) + ": Error").c_str();
+	Utils::msgBox((const Char*)msg, APP_TITLE_WITH_ERROR);
 }
 void msgBox_abortError(const char* msg) {
 	const std::string msgPlusAbortMsg = std::string(msg) + "\n\n(Exiting program)";
@@ -125,12 +125,17 @@ void hotkey_gammaToggle() {
 	}
 }
 void hotkey_exit() {
-	WAIT_FOR_KEYPRESS(Robot::Key::KeyEscape);
+	int keymissCount = 0;
+	HOTKEY_WAIT_UNTIL_TRUE__AND_EXIT_IF_MAIN_THREAD_IS_ENDING(kbd.GetState(Robot::Key::KeySystem) && kbd.GetState(Robot::Key::KeyEscape));
 }
 
 #define EXITING	{ g_exiting = true; hotkeyThread_winkeyPlusB.join(); }
 
+#ifdef _WIN32
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
+#else
+int main()
+#endif
 {
 #pragma region Init GLFW
 	if (!glfwInit()) // http://www.glfw.org/docs/latest/intro_guide.html
@@ -168,14 +173,14 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_ HINSTANCE hPrevInstance, _In
 	}
 
 	//tut
-	msgBox(
+	msgBox(std::string(
 "Controls:\n\
- - Press {Windows Key + G} to toggle gamma (brightness)\n\
- - Press {Escape} to exit the program\n\n\
+ - Press {" + std::string(Utils::SYSTEM_KEY_NAME) + " + G} to toggle gamma (brightness)\n\
+ - Press {" + std::string(Utils::SYSTEM_KEY_NAME) + " + Escape} to exit the program\n\n\
 Tips:\n\
  - Edit the config.txt file to set the gamma to be used when toggling (requires restart)\n\
  - Gamma is toggled for the monitor that the mouse is currently hovering over"
-	);
+	).c_str());
 
 	std::thread hotkeyThread_winkeyPlusB(hotkey_gammaToggle);
 
